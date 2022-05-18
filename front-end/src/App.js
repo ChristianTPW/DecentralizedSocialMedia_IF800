@@ -1,58 +1,30 @@
-import React, {useEffect, useState} from "react";
+import React, { useMemo, useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { ethers } from "ethers";
+
+import contractABI from "./utils/contractABI.json";
+
+import Home from "./pages/home.jsx";
+import PrivatePage from "./pages/privatePage";
+import { UserContext } from "./context/userContext";
+import Navbar from "./components/navbar";
 
 const App = () => {
+  const [address, setAddress] = useState(null);
 
-  const [currentAccount, setCurrentAccount] = useState('');
-
-  const checkIfWalletIsConnected = async () => {
-    const {ethereum} = window;
-
-    if(!ethereum) {
-      console.log("Make sure you have Metamask");
-      return;
-    }else{
-      console.log("We have the ethereum object", ethereum);
-    }
-
-    const accounts = await ethereum.request({method: 'eth_accounts'});
-
-    if(accounts.length !== 0) {
-      const account = accounts[0];
-      console.log('Found an authorized account:', account);
-      setCurrentAccount(account);
-    }else{
-      console.log("No authorized account found");
-    }
-
-  }
-
-  const connectWallet = async () => {
-    try{
-      const {ethereum} = window;
-
-      if(!ethereum){
-        alert("Get Wallet!");
-        return;
-      }
-
-      const accounts = await ethereum.request({method: "eth_requestAccounts"});
-
-      console.log("Connected", accounts[0]);
-      setCurrentAccount(accounts[0]);
-    }catch(error){
-      console.log(error);
-    }
-  }
-
-  useEffect(() => {
-    checkIfWalletIsConnected();
-  }, [])
-  
   return (
-    <div className="App">
-      <button onClick={connectWallet}>connectWallet</button>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <UserContext.Provider value={{ address, setAddress }}>
+          <Routes>
+            <Route path="/" exact element={<Home />} />
+            <Route path="/private" element={<PrivatePage />} />
+          </Routes>
+        </UserContext.Provider>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;

@@ -8,7 +8,10 @@ const main = async () => {
   );
   const socialMediaContract = await socialMediaContractFactory.deploy();
   await socialMediaContract.deployed();
-  console.log("Contract deployed to:", socialMediaContract.address);
+  console.log(
+    "Social media contract deployed to:",
+    socialMediaContract.address
+  );
 
   //deploy tokenSmartContract
   //100 token minted to owner account
@@ -20,37 +23,30 @@ const main = async () => {
     "100000000000000000000"
   );
   await tokenSmartContract.deployed();
-  console.log("Contract deployed to:", tokenSmartContract.address);
+  console.log("Token contract deployed to:", tokenSmartContract.address);
 
   //set token address on
   const setTokenAddress = await socialMediaContract.setTokenContractAddress(
     tokenSmartContract.address
   );
 
-  const ownerBalance = await tokenSmartContract.balanceOf(owner.address);
-  console.log("Owner token balance: ", ownerBalance);
+  //check owner balance
+  //const ownerBalance = await tokenSmartContract.balanceOf(owner.address);
+  //console.log("Owner token balance: ", ownerBalance);
 
-  const ownerRegister = await socialMediaContract.register(
-    "ASE",
-    "i guess im the owner"
-  );
-  console.log("Sign up: ", ownerRegister);
+  //register owner
+  //const ownerRegister = await socialMediaContract.register("ASE", "i guess im the owner");
+  //console.log("Sign up: ", ownerRegister);
 
-  const ownerPost = await socialMediaContract.userPost("HELLO");
-  await socialMediaContract.userPost("BEBEK");
+  //testing post
+  //const ownerPost = await socialMediaContract.userPost("HELLO");
 
-  const approveSpender = await tokenSmartContract.approve(
-    socialMediaContract.address,
-    1
-  );
+  //const approveSpender = await tokenSmartContract.approve(socialMediaContract.address, 1);
 
-  const ownerLike = await socialMediaContract.like(1);
+  //const ownerLike = await socialMediaContract.like(0);
 
-  const newOwnerBalance = await tokenSmartContract.balanceOf(owner.address);
-  console.log("Owner token balance: ", newOwnerBalance);
-
-  const getallPost = await socialMediaContract.getAllMintedPost();
-  console.log("All minted post", getallPost);
+  //const newOwnerBalance = await tokenSmartContract.balanceOf(owner.address);
+  //console.log("Owner token balance: ", newOwnerBalance);
 };
 
 const runMain = async () => {

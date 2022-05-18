@@ -15,11 +15,14 @@ interface ICredibilityToken {
     ) external returns (bool);
 
     function approve(address spender, uint256 amount) external returns (bool);
+
+    function burn(address account, uint256 amount) external; 
 }
 
 contract SocialMedia is ERC721URIStorage {
     address owner;
     uint256 id;
+    uint256 registeredUser;
     uint256 nftId;
     address tokenAddress;
 
@@ -27,11 +30,12 @@ contract SocialMedia is ERC721URIStorage {
         owner = msg.sender;
         id = 0;
         nftId = 0;
+        registeredUser = 0;
     }
 
     struct profile {
-        string nickname;
-        string profilePicture;
+        uint256 uid;
+        string username;
         string description;
         uint256 numberOfPost;
         uint256 totalLikes;
@@ -43,8 +47,9 @@ contract SocialMedia is ERC721URIStorage {
     }
 
     struct post {
+        uint256 postId;
         string content;
-        string date;
+        uint256 date;
         address owner;
         uint256 like;
         uint256 dislike;
@@ -56,17 +61,16 @@ contract SocialMedia is ERC721URIStorage {
     mapping(uint256 => post) public posts;
     mapping(uint256 => address[]) public listOfPostLikers;
     mapping(address => uint256[]) public listOfLikedPost;
+    mapping(uint256 => uint256) public mintedId;
 
-    function signUp(
-        string calldata _nickname,
-        string calldata _profilePicture,
+    function register(
+        string calldata _username,
         string calldata _description
     ) public {
         require(!userProfile[msg.sender].active, "You already have a profile!");
 
         userProfile[msg.sender].active = true;
-        userProfile[msg.sender].nickname = _nickname;
-        userProfile[msg.sender].profilePicture = _profilePicture;
+        userProfile[msg.sender].username = _username;
         userProfile[msg.sender].description = _description;
         userProfile[msg.sender].numberOfPost = 0;
         userProfile[msg.sender].totalLikes = 0;
@@ -76,8 +80,10 @@ contract SocialMedia is ERC721URIStorage {
 
     function userPost(string calldata _content) public {
         require(userProfile[msg.sender].active, "You have to sign up first");
+        posts[id].postId = id;
         posts[id].owner = msg.sender;
         posts[id].content = _content;
+        posts[id].date = block.timestamp;
         posts[id].like = 0;
         posts[id].dislike = 0;
         posts[id].isActive = true;
@@ -104,10 +110,15 @@ contract SocialMedia is ERC721URIStorage {
         ICredibilityToken(tokenAddress).transferFrom(
             msg.sender,
             address(this),
-            1
+            1 * 10**18
         );
 
         if (posts[_postId].like >= 1) {
+
+            posts[_postId].isActive = false;
+
+            mintedId[nftId] = _postId;
+
             string memory json = Base64.encode(
                 bytes(
                     string(
@@ -128,16 +139,16 @@ contract SocialMedia is ERC721URIStorage {
                 abi.encodePacked("data:application/json;base64,", json)
             );
 
-            _safeMint(posts[_postId].owner, nftId);
-            _setTokenURI(nftId, finalTokenUri);
+            _safeMint(posts[_postId].owner, _postId);
+            _setTokenURI(_postId, finalTokenUri);
 
             ICredibilityToken token = ICredibilityToken(tokenAddress);
 
-            uint256 amount = 10;
+            uint256 amount = 10* 10**18;
 
             token.smartContractMint(amount, posts[_postId].likers);
 
-            nftId++;
+            nftId = nftId + 1;
         }
     }
 
@@ -156,17 +167,47 @@ contract SocialMedia is ERC721URIStorage {
 
         if (posts[_postId].dislike >= 1) {
             posts[_postId].isActive = false;
+            posts[_postId].content = "";
         }
     }
 
+    function likeMinted(uint256 _postId) public {
+        require(userProfile[msg.sender].active, "You have to sign up first");
+        require(posts[_postId].isActive = false, "Post is not active yet");
+
+        ICredibilityToken(tokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            10*10**18
+        );
+
+        ICredibilityToken(tokenAddress).transferFrom(address(this), posts[_postId].owner , 9*10**18);
+
+        ICredibilityToken(tokenAddress).burn(address(this), 1*10**18);
+
+        posts[_postId].date = block.timestamp;
+        posts[_postId].like += 1;
+    }
+
+    //input token smart contract address
     function setTokenContractAddress(address _contractAddress) public {
         require(msg.sender == owner, "You are not the owner");
         tokenAddress = _contractAddress;
     }
 
-    //function to check if account is exist
-    function isAccountExist() public view returns (bool) {
+    //function to check if account is registered
+    function isRegistered() public view returns (bool) {
         return userProfile[msg.sender].active;
+    }
+
+    //function to get registered username
+    function getUsername() public view returns (string memory) {
+        return userProfile[msg.sender].username;
+    }
+
+    //function to get account's description
+    function getDescription() public view returns (string memory) {
+        return userProfile[msg.sender].description;
     }
 
     //get all posts
@@ -177,6 +218,15 @@ contract SocialMedia is ERC721URIStorage {
         }
 
         return getAllPosts;
+    }
+
+    function getAllMintedPost() public view returns(post[] memory){
+        post[] memory getAllMintedPosts = new post[](nftId);
+        for(uint256 i=0; i<nftId; i++){
+            getAllMintedPosts[i] = posts[mintedId[i]];
+        }
+        
+        return getAllMintedPosts;
     }
 }
 
