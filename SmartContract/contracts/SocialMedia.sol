@@ -144,7 +144,7 @@ contract SocialMedia is ERC721URIStorage {
 
             ICredibilityToken token = ICredibilityToken(tokenAddress);
 
-            uint256 amount = 10* 10**18;
+            uint256 amount = 10 * 10**16;
 
             token.smartContractMint(amount, posts[_postId].likers);
 

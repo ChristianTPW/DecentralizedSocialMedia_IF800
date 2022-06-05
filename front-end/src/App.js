@@ -1,8 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { ethers } from "ethers";
-
-import contractABI from "./utils/contractABI.json";
 
 import Home from "./pages/home.jsx";
 import PrivatePage from "./pages/privatePage";

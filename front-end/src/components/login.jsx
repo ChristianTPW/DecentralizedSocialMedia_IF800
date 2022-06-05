@@ -62,12 +62,7 @@ const Login = () => {
     checkIfWalletIsConnected();
   });
 
-  return (
-    <div>
-      {!address && connectWalletButton()}
-      {address && walletConnected()}
-    </div>
-  );
+  return <div>{!address && connectWalletButton()}</div>;
 };
 
 export default Login;

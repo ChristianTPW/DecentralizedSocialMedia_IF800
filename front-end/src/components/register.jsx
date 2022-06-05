@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { Textarea, Box, Button, Input, HStack } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
+import ShowPost from "./showPost";
 
 const Register = () => {
   const [registerStatus, setRegisterStatus] = useState("");
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
 
   const { REACT_APP_SOCIALMEDIA } = process.env;
 
@@ -30,8 +33,6 @@ const Register = () => {
           setDescription(await contract.getDescription());
         }
         setRegisterStatus(accountStatus);
-
-        console.log("Account is registered? ", registerStatus);
       }
     } catch (error) {
       console.log(error);
@@ -51,16 +52,30 @@ const Register = () => {
         );
 
         // Get all the domain names from our contract
-        const check = await contract.register(username, description);
+        await contract.register(username, description);
 
-        console.log(
-          "User: ",
-          username,
-          "Desc: ",
-          description,
-          "status: ",
-          check
+        isRegistered();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const post = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+          REACT_APP_SOCIALMEDIA,
+          contractABI.abi,
+          signer
         );
+
+        await contract.userPost(content);
+
+        <ShowPost actionName={this.fetchMints} />;
       }
     } catch (error) {
       console.log(error);
@@ -72,42 +87,51 @@ const Register = () => {
       setUsername(val.target.value);
     }
 
-    function getDescription(val) {
-      setDescription(val.target.value);
-    }
-
     return (
       <div>
-        <input type="text" placeholder="Username" onChange={getUsername} />
-        <input
-          type="text"
-          placeholder="Description"
-          onChange={getDescription}
-        />
+        <HStack m="5">
+          <Input
+            type="text"
+            placeholder="Username"
+            onChange={getUsername}
+            w="20%"
+          />
 
-        <button onClick={register}>Register</button>
+          <Button onClick={register} colorScheme="twitter">
+            Register
+          </Button>
+        </HStack>
       </div>
     );
   };
 
-  const welcomePage = () => {
+  const postForm = () => {
+    function getContent(val) {
+      setContent(val.target.value);
+    }
     return (
-      <div>
-        Welcome {username}
-        <br></br>
-        desc {description}
-      </div>
+      <Box p="5">
+        <Textarea
+          placeholder="What do you want to post?"
+          onChange={getContent}
+          p="2"
+        ></Textarea>
+
+        <Button onClick={post} p="5" mt="5" w="full" colorScheme="twitter">
+          Post
+        </Button>
+      </Box>
     );
   };
 
   useEffect(() => {
     isRegistered();
-  }, [username]);
+  });
+
   return (
     <div>
       {!registerStatus && registerForm()}
-      <button onClick={isRegistered}>reg?</button>
-      {registerStatus && welcomePage()}
+      {registerStatus && postForm()}
     </div>
   );
 };

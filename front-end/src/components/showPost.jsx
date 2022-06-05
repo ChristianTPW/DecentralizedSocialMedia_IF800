@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HStack, VStack, Text, Button } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
 import tokenABI from "../utils/tokenABI.json";
@@ -116,27 +117,23 @@ const ShowPost = () => {
 
   useEffect(() => {
     fetchMints().then((res) => setPosts(res));
-  }, []);
+  });
 
   return (
     <div>
       {posts
         .filter((data) => data.isActive === "true")
         .map((r) => (
-          <div key={r.id}>
-            <p>ID: {r.id}</p>
-            <p>{r.content}</p>
-            <p>Posted by: {r.owner}</p>
-            <p>Like: {r.like}</p>
-            <p>Dislike: {r.dislike}</p>
-            <p>Status: {r.isActive}</p>
-
-            <button onClick={() => likePost(r.id)}>Like ({r.id})</button>
-            <button onClick={() => dislikePost(r.id)}>Dislike({r.id})</button>
-          </div>
+          <VStack bg="Gray" borderRadius="10" p="5" m="5" key={r.id}>
+            <HStack>
+              <Text>{r.content}</Text>
+            </HStack>
+            <HStack>
+              <Button onClick={() => likePost(r.id)}>Like</Button>
+              <Button onClick={() => dislikePost(r.id)}>Dislike</Button>
+            </HStack>
+          </VStack>
         ))}
-
-      <button onClick={checkAllowance}>Allowance</button>
     </div>
   );
 };

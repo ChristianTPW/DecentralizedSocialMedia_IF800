@@ -1,12 +1,12 @@
 import React from "react";
 
-import Post from "../components/post.jsx";
+import Register from "../components/register.jsx";
 import ShowPost from "../components/showPost.jsx";
 
 const PrivatePage = () => {
   return (
     <div>
-      <Post />
+      <Register />
       <ShowPost />
     </div>
   );

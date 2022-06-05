@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
+import { ethers, Signer } from "ethers";
+import { HStack, VStack, Button, Text } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
 
@@ -7,6 +8,24 @@ const ShowNft = () => {
   const [posts, setPosts] = useState([]);
 
   const { REACT_APP_SOCIALMEDIA } = process.env;
+
+  const likeMinted = async (id) => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+          REACT_APP_SOCIALMEDIA,
+          contractABI.abi,
+          signer
+        );
+        await contract.likeMinted(id);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const fetchMints = async () => {
     try {
@@ -19,7 +38,7 @@ const ShowNft = () => {
           contractABI.abi,
           signer
         );
-        const posts = await contract.getAllPost();
+        const posts = await contract.getAllMintedPost();
 
         console.log(posts);
 
@@ -44,17 +63,27 @@ const ShowNft = () => {
 
   return (
     <div>
-      posted:
-      {posts.map((r) => (
-        <div key={r.id}>
-          <p>ID: {r.id}</p>
-          <p>{r.content}</p>
-          <p>Posted by: {r.owner}</p>
-          <p>Like: {r.like}</p>
-          <p>Dislike: {r.dislike}</p>
-          <p>Status: {r.isActive}</p>
-        </div>
-      ))}
+      {posts
+        .sort((a, b) => parseInt(b.date) - parseInt(a.date))
+        .map((r) => (
+          <VStack bg="Gray" borderRadius="10" p="5" m="5" key={r.id}>
+            <HStack>
+              <VStack>
+                <Text>{r.content}</Text>
+
+                <Text>posted by: {r.owner}</Text>
+                <HStack>
+                  <Text>Like: {r.like}</Text>
+                  <Text>Dislike: {r.dislike}</Text>
+                </HStack>
+              </VStack>
+            </HStack>
+            <HStack>
+              {/* <Button onClick={() => likePost(r.id)}>Like ({r.id})</Button> */}
+              <Button onClick={() => likeMinted(r.id)}>Like</Button>
+            </HStack>
+          </VStack>
+        ))}
     </div>
   );
 };

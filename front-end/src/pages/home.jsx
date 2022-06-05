@@ -1,7 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { ethers } from "ethers";
-
-import contractABI from "../utils/contractABI.json";
+import React from "react";
 
 import Login from "../components/login.jsx";
 import Register from "../components/register.jsx";

@@ -26,9 +26,7 @@ const main = async () => {
   console.log("Token contract deployed to:", tokenSmartContract.address);
 
   //set token address on
-  const setTokenAddress = await socialMediaContract.setTokenContractAddress(
-    tokenSmartContract.address
-  );
+  await socialMediaContract.setTokenContractAddress(tokenSmartContract.address);
 
   //check owner balance
   //const ownerBalance = await tokenSmartContract.balanceOf(owner.address);
