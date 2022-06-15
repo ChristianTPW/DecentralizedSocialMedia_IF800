@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 interface ICredibilityToken {
-    function smartContractMint(uint256 amount, address[] memory receiver)
+    function smartContractMint(uint256 amount, address[3] memory receiver)
         external;
 
     function transferFrom(
@@ -16,10 +16,13 @@ interface ICredibilityToken {
 
     function approve(address spender, uint256 amount) external returns (bool);
 
-    function burn(address account, uint256 amount) external; 
+    function burnFrom(address account, uint256 amount) external; 
+
+    function balanceOf(address account) external view returns (uint256);
+
 }
 
-contract SocialMedia is ERC721URIStorage {
+contract SocialMedia is ERC721 {
     address owner;
     uint256 id;
     uint256 registeredUser;
@@ -36,13 +39,9 @@ contract SocialMedia is ERC721URIStorage {
     struct profile {
         uint256 uid;
         string username;
-        string description;
-        uint256 numberOfPost;
-        uint256 totalLikes;
-        uint256 totalDislikes;
-        uint256 validVote;
-        uint256 approvedPost;
         bool active;
+        uint256 hiddenCounter;
+        mapping(uint256 => uint256) hiddenId;
         mapping(uint256 => bool) postInteraction;
     }
 
@@ -54,32 +53,35 @@ contract SocialMedia is ERC721URIStorage {
         uint256 like;
         uint256 dislike;
         bool isActive;
-        address[] likers;
+        address[3] likers;
+        address[3] dislikers;
     }
 
+    //connect profile struct with address
     mapping(address => profile) public userProfile;
+
+    //connect post struct with id
     mapping(uint256 => post) public posts;
-    mapping(uint256 => address[]) public listOfPostLikers;
-    mapping(address => uint256[]) public listOfLikedPost;
+
+    //connect minted id with post id
     mapping(uint256 => uint256) public mintedId;
 
+
+
+    //function to register an address
     function register(
-        string calldata _username,
-        string calldata _description
+        string calldata _username
     ) public {
         require(!userProfile[msg.sender].active, "You already have a profile!");
 
         userProfile[msg.sender].active = true;
         userProfile[msg.sender].username = _username;
-        userProfile[msg.sender].description = _description;
-        userProfile[msg.sender].numberOfPost = 0;
-        userProfile[msg.sender].totalLikes = 0;
-        userProfile[msg.sender].totalDislikes = 0;
-        userProfile[msg.sender].validVote = 0;
     }
 
+    //function for user to post
     function userPost(string calldata _content) public {
         require(userProfile[msg.sender].active, "You have to sign up first");
+        require(StringUtils.strlen(_content) <= 160, "Too many chararcter!");
         posts[id].postId = id;
         posts[id].owner = msg.sender;
         posts[id].content = _content;
@@ -88,10 +90,14 @@ contract SocialMedia is ERC721URIStorage {
         posts[id].dislike = 0;
         posts[id].isActive = true;
 
-        userProfile[msg.sender].numberOfPost += 1;
+        //set owner post interaction as true
+        userProfile[msg.sender].postInteraction[id] = true;
+
         id++;
     }
 
+    //function to vote (like)
+    //this function will be shown in private page
     function like(uint256 _postId) public {
         require(userProfile[msg.sender].active, "You have to sign up first");
         require(
@@ -102,51 +108,33 @@ contract SocialMedia is ERC721URIStorage {
             !userProfile[msg.sender].postInteraction[_postId],
             "You already liked or dislike this post!"
         );
+        require(ICredibilityToken(tokenAddress).balanceOf(msg.sender) >= 100*10**18, "You did not have enough balance");
 
-        posts[_postId].like += 1;
-        posts[_postId].likers.push(msg.sender);
-        userProfile[msg.sender].postInteraction[_postId] = true;
-
+        //paying 1 token to smart contract
         ICredibilityToken(tokenAddress).transferFrom(
             msg.sender,
             address(this),
-            1 * 10**18
+            10**18
         );
+        posts[_postId].likers[posts[_postId].like] = msg.sender;
+        posts[_postId].like += 1;
+        userProfile[msg.sender].postInteraction[_postId] = true;
 
-        if (posts[_postId].like >= 1) {
+
+        //if posts hit threshold then mint and send token
+        if (posts[_postId].like >= 3) {
 
             posts[_postId].isActive = false;
 
             mintedId[nftId] = _postId;
 
-            string memory json = Base64.encode(
-                bytes(
-                    string(
-                        abi.encodePacked(
-                            '{"owner": " ',
-                            // We set the title of our NFT as the generated word.
-                            posts[_postId].owner,
-                            '", "content": ',
-                            posts[_postId].content,
-                            '"}'
-                        )
-                    )
-                )
-            );
-
-            // Just like before, we prepend data:application/json;base64, to our data.
-            string memory finalTokenUri = string(
-                abi.encodePacked("data:application/json;base64,", json)
-            );
-
             _safeMint(posts[_postId].owner, _postId);
-            _setTokenURI(_postId, finalTokenUri);
 
-            ICredibilityToken token = ICredibilityToken(tokenAddress);
-
+            //set reward as 1%
             uint256 amount = 10 * 10**16;
 
-            token.smartContractMint(amount, posts[_postId].likers);
+            //calling mint function from token smart contract and send to likers
+            ICredibilityToken(tokenAddress).smartContractMint(amount, posts[_postId].likers);
 
             nftId = nftId + 1;
         }
@@ -162,31 +150,58 @@ contract SocialMedia is ERC721URIStorage {
             !userProfile[msg.sender].postInteraction[_postId],
             "You already liked or dislike this post!"
         );
-        posts[_postId].dislike += 1;
-        userProfile[msg.sender].postInteraction[_postId] = true;
+        require(ICredibilityToken(tokenAddress).balanceOf(msg.sender) >= 100*10**18, "You did not have enough balance");
 
-        if (posts[_postId].dislike >= 1) {
-            posts[_postId].isActive = false;
-            posts[_postId].content = "";
-        }
-    }
-
-    function likeMinted(uint256 _postId) public {
-        require(userProfile[msg.sender].active, "You have to sign up first");
-        require(posts[_postId].isActive = false, "Post is not active yet");
-
+        //paying 1 token to smart contract
         ICredibilityToken(tokenAddress).transferFrom(
             msg.sender,
             address(this),
-            10*10**18
+            10**18
         );
 
-        ICredibilityToken(tokenAddress).transferFrom(address(this), posts[_postId].owner , 9*10**18);
+        posts[_postId].dislikers[posts[_postId].dislike] = msg.sender;
+        posts[_postId].dislike += 1;
+        userProfile[msg.sender].postInteraction[_postId] = true;
 
-        ICredibilityToken(tokenAddress).burn(address(this), 1*10**18);
+        if (posts[_postId].dislike >= 3) {
+            posts[_postId].isActive = false;
+            posts[_postId].content = "";
 
+            //set reward as 1%
+            uint256 amount = 10 * 10**16;
+
+            //calling mint function from token smart contract and send to likers
+            ICredibilityToken(tokenAddress).smartContractMint(amount, posts[_postId].dislikers);
+        }
+    }
+
+    //function to like minted post
+    //this function will be shown on public page
+    function likeMinted(uint256 _postId) public {
+        require(userProfile[msg.sender].active, "You have to sign up first");
+        require(!posts[_postId].isActive, "Post is not active yet");
+        require(ICredibilityToken(tokenAddress).balanceOf(msg.sender) >= 10**18, "You did not have enough balance");
+
+        ICredibilityToken(tokenAddress).transferFrom(
+            msg.sender,
+            posts[_postId].owner,
+            9*10**17
+        );
+
+        // burn 0.1 token
+       ICredibilityToken(tokenAddress).burnFrom(msg.sender, 1*10**17);
+
+        
         posts[_postId].date = block.timestamp;
         posts[_postId].like += 1;
+    }
+
+    function hideMinted(uint256 _postId) public {
+        require(userProfile[msg.sender].active, "You have to sign up first");
+        require(!posts[_postId].isActive, "Post is not active yet");
+
+        userProfile[msg.sender].hiddenId[userProfile[msg.sender].hiddenCounter] = _postId;
+        userProfile[msg.sender].hiddenCounter++;
     }
 
     //input token smart contract address
@@ -201,13 +216,19 @@ contract SocialMedia is ERC721URIStorage {
     }
 
     //function to get registered username
-    function getUsername() public view returns (string memory) {
-        return userProfile[msg.sender].username;
+    function getUsername(address _user) public view returns (string memory) {
+        return userProfile[_user].username;
     }
 
-    //function to get account's description
-    function getDescription() public view returns (string memory) {
-        return userProfile[msg.sender].description;
+    //get all user hidden id
+    function getHiddenId() public view returns (uint256[] memory){
+        uint256[] memory arrayOfHidden = new uint256[](userProfile[msg.sender].hiddenCounter);
+
+        for(uint256 i=0; i<userProfile[msg.sender].hiddenCounter; i++){
+            arrayOfHidden[i] = userProfile[msg.sender].hiddenId[i];
+        }
+
+        return arrayOfHidden;
     }
 
     //get all posts
@@ -220,6 +241,7 @@ contract SocialMedia is ERC721URIStorage {
         return getAllPosts;
     }
 
+    //get all minted post (post that will be shown in public page)
     function getAllMintedPost() public view returns(post[] memory){
         post[] memory getAllMintedPosts = new post[](nftId);
         for(uint256 i=0; i<nftId; i++){
@@ -230,69 +252,33 @@ contract SocialMedia is ERC721URIStorage {
     }
 }
 
-library Base64 {
-    bytes internal constant TABLE =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    /// @notice Encodes some bytes to the base64 representation
-    function encode(bytes memory data) internal pure returns (string memory) {
-        uint256 len = data.length;
-        if (len == 0) return "";
-
-        // multiply by 4/3 rounded up
-        uint256 encodedLen = 4 * ((len + 2) / 3);
-
-        // Add some extra buffer at the end
-        bytes memory result = new bytes(encodedLen + 32);
-
-        bytes memory table = TABLE;
-
-        assembly {
-            let tablePtr := add(table, 1)
-            let resultPtr := add(result, 32)
-
-            for {
-                let i := 0
-            } lt(i, len) {
-
-            } {
-                i := add(i, 3)
-                let input := and(mload(add(data, i)), 0xffffff)
-
-                let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF)
-                )
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF)
-                )
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(input, 0x3F))), 0xFF)
-                )
-                out := shl(224, out)
-
-                mstore(resultPtr, out)
-
-                resultPtr := add(resultPtr, 4)
+library StringUtils {
+    /**
+     * @dev Returns the length of a given string
+     *
+     * @param s The string to measure the length of
+     * @return The length of the input string
+     */
+    function strlen(string memory s) internal pure returns (uint256) {
+        uint256 len;
+        uint256 i = 0;
+        uint256 bytelength = bytes(s).length;
+        for (len = 0; i < bytelength; len++) {
+            bytes1 b = bytes(s)[i];
+            if (b < 0x80) {
+                i += 1;
+            } else if (b < 0xE0) {
+                i += 2;
+            } else if (b < 0xF0) {
+                i += 3;
+            } else if (b < 0xF8) {
+                i += 4;
+            } else if (b < 0xFC) {
+                i += 5;
+            } else {
+                i += 6;
             }
-
-            switch mod(len, 3)
-            case 1 {
-                mstore(sub(resultPtr, 2), shl(240, 0x3d3d))
-            }
-            case 2 {
-                mstore(sub(resultPtr, 1), shl(248, 0x3d))
-            }
-
-            mstore(result, encodedLen)
         }
-
-        return string(result);
+        return len;
     }
 }

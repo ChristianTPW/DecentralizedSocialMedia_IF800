@@ -4,12 +4,15 @@ import { Textarea, Box, Button, Input, HStack } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
 import ShowPost from "./showPost";
+import Loading from "./loading";
 
 const Register = () => {
   const [registerStatus, setRegisterStatus] = useState("");
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(null);
 
   const { REACT_APP_SOCIALMEDIA } = process.env;
 
@@ -29,8 +32,7 @@ const Register = () => {
         const accountStatus = await contract.isRegistered();
 
         if (accountStatus) {
-          setUsername(await contract.getUsername());
-          setDescription(await contract.getDescription());
+          setUsername(await contract.getUsername(signer.getAddress()));
         }
         setRegisterStatus(accountStatus);
       }
@@ -52,7 +54,7 @@ const Register = () => {
         );
 
         // Get all the domain names from our contract
-        await contract.register(username, description);
+        await contract.register(username);
 
         isRegistered();
       }
@@ -73,12 +75,15 @@ const Register = () => {
           signer
         );
 
+        // callModal
+        setIsLoading(true);
         await contract.userPost(content);
-
-        <ShowPost actionName={this.fetchMints} />;
+        //<ShowPost actionName={this.fetchMints} />;
+        setIsLoading(false);
       }
     } catch (error) {
       console.log(error);
+      setLoadingMessage(error.message);
     }
   };
 
@@ -130,6 +135,11 @@ const Register = () => {
 
   return (
     <div>
+      <Loading
+        isOpen={isLoading}
+        onClose={() => setIsLoading(false)}
+        message={loadingMessage}
+      />
       {!registerStatus && registerForm()}
       {registerStatus && postForm()}
     </div>

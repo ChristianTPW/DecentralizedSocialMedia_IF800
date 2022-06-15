@@ -7,6 +7,7 @@ import { ethers } from "ethers";
 
 const ShowPost = () => {
   const [posts, setPosts] = useState([]);
+  const [status, setStatus] = useState("");
 
   const { REACT_APP_SOCIALMEDIA, REACT_APP_TOKEN } = process.env;
 
@@ -26,19 +27,52 @@ const ShowPost = () => {
           signer.getAddress(),
           REACT_APP_SOCIALMEDIA
         );
-        console.log("Allowance: ", allowance.toString());
+        console.log(
+          "Allowance: ",
+          allowance.toString(),
+          typeof allowance.toString()
+        );
 
         const totalSupply = await contract.totalSupply();
 
         const balance = await contract.balanceOf(signer.getAddress());
-        console.log("Balance: ", balance.toString());
+        console.log("Balance: ", balance.toString(), typeof balance.toString());
 
-        if (allowance <= totalSupply) {
+        // eslint-disable-next-line no-undef
+        console.log(BigInt(allowance.toString()) <= BigInt(balance.toString()));
+        // eslint-disable-next-line no-undef
+        if (BigInt(allowance.toString()) < BigInt(totalSupply.toString())) {
           const totalSupply = await contract.totalSupply();
           await contract.approve(REACT_APP_SOCIALMEDIA, totalSupply.toString());
         } else {
           console.log("Enough");
         }
+      }
+    } catch (error) {
+      console.log(error);
+      //console.log("TOKEN ADDRESS:", signer);
+    }
+  };
+
+  const checkBalance = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(
+          REACT_APP_TOKEN,
+          tokenABI.abi,
+          signer
+        );
+
+        const balance =
+          (await contract.balanceOf(signer.getAddress())) / 10 ** 18;
+
+        if (balance.toString() >= 100) {
+          return true;
+        }
+        return false;
       }
     } catch (error) {
       console.log(error);
@@ -59,7 +93,8 @@ const ShowPost = () => {
           signer
         );
 
-        checkAllowance();
+        await checkAllowance();
+        console.log("rpc tidak error");
 
         await contract.like(id);
       }
@@ -99,6 +134,8 @@ const ShowPost = () => {
           signer
         );
         const posts = await contract.getAllPost();
+        const balance = await checkBalance();
+        setStatus(balance);
 
         return posts.map((p) => ({
           id: p[0].toString(),
@@ -121,19 +158,28 @@ const ShowPost = () => {
 
   return (
     <div>
-      {posts
-        .filter((data) => data.isActive === "true")
-        .map((r) => (
-          <VStack bg="Gray" borderRadius="10" p="5" m="5" key={r.id}>
-            <HStack>
-              <Text>{r.content}</Text>
-            </HStack>
-            <HStack>
-              <Button onClick={() => likePost(r.id)}>Like</Button>
-              <Button onClick={() => dislikePost(r.id)}>Dislike</Button>
-            </HStack>
-          </VStack>
-        ))}
+      {status ? (
+        <div>
+          {posts
+            .filter((data) => data.isActive === "true")
+            .map((r) => (
+              <VStack bg="Gray" borderRadius="10" p="5" m="5" key={r.id}>
+                <HStack>
+                  <Text>{r.content}</Text>
+                  <Text>{r.id}</Text>
+                </HStack>
+                <HStack>
+                  <Button onClick={() => likePost(r.id)}>Like {r.like}</Button>
+                  <Button onClick={() => dislikePost(r.id)}>
+                    Dislike {r.dislike}
+                  </Button>
+                </HStack>
+              </VStack>
+            ))}
+        </div>
+      ) : (
+        <div>You did not have enough balance</div>
+      )}
     </div>
   );
 };

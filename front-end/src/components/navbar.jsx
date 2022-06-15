@@ -15,12 +15,14 @@ import {
 } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
+import tokenABI from "../utils/tokenABI.json";
 
 const Navbar = () => {
   const [address, setAddress] = useState("");
+  const [balance, setBalance] = useState("");
   const { toggleColorMode } = useColorMode();
 
-  const { REACT_APP_SOCIALMEDIA } = process.env;
+  const { REACT_APP_SOCIALMEDIA, REACT_APP_TOKEN } = process.env;
 
   const connectWallet = useCallback(async () => {
     try {
@@ -45,18 +47,49 @@ const Navbar = () => {
         signer
       );
 
-      // Get all the domain names from our contract
-      const username = await contract.getUsername();
+      // Get all the usernames from our contract
+      const username = await contract.getUsername(signer.getAddress());
 
-      setAddress(username);
+      getBalance();
+
+      if (username != "") {
+        setAddress(username);
+      }
     } catch (error) {
       console.log(error);
     }
   }, [REACT_APP_SOCIALMEDIA]);
 
+  const getBalance = useCallback(async () => {
+    try {
+      const { ethereum } = window;
+      if (!ethereum) {
+        return;
+      }
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        REACT_APP_TOKEN,
+        tokenABI.abi,
+        signer
+      );
+
+      const token = (await contract.balanceOf(signer.getAddress())) / 10 ** 18;
+
+      setBalance(token.toString());
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
   useEffect(() => {
     connectWallet();
+    getBalance();
   }, [connectWallet]);
+
+  useEffect(() => {
+    getBalance();
+  }, [getBalance]);
 
   return (
     <Flex as="nav" p="4" w="full">
@@ -91,7 +124,10 @@ const Navbar = () => {
       <Spacer />
 
       {address ? (
-        <Text fontWeight="bold">Hi, {address}</Text>
+        <HStack>
+          <Text fontWeight="bold">Token: {balance}</Text>
+          <Text fontWeight="bold">Hi, {address}</Text>
+        </HStack>
       ) : (
         <Button size="sm" colorScheme="teal" onClick={connectWallet}>
           Login
