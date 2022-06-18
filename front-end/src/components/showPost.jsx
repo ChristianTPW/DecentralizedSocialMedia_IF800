@@ -166,7 +166,6 @@ const ShowPost = () => {
               <VStack bg="Gray" borderRadius="10" p="5" m="5" key={r.id}>
                 <HStack>
                   <Text>{r.content}</Text>
-                  <Text>{r.id}</Text>
                 </HStack>
                 <HStack>
                   <Button onClick={() => likePost(r.id)}>Like {r.like}</Button>

@@ -10,7 +10,7 @@ const main = async () => {
   //get social media smart contract information and address
   const socialMediaContractFactory = await hre.ethers.getContractAt(
     "SocialMedia",
-    "0xC84898eCB08e36324A72819D527A0A8Aa2376F35"
+    "0x1052b6b8930E11A7ffF2fD27bFD56F730e8ea68e"
   );
 
   var beforeSubmit;
@@ -22,9 +22,7 @@ const main = async () => {
 
   //post userZero
   beforeSubmit = Date.now();
-  post = await socialMediaContractFactory.userPost(
-    "😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊"
-  );
+  post = await socialMediaContractFactory.userPost("Example Post #1");
   startTime = Date.now();
   await provider.waitForTransaction(post.hash, 1);
   transactionTime = Date.now() - startTime;
@@ -42,7 +40,9 @@ const main = async () => {
 
   //post userOne
   beforeSubmit = Date.now();
-  post = await socialMediaContractFactory.connect(userOne).userPost("");
+  post = await socialMediaContractFactory
+    .connect(userOne)
+    .userPost("Example Post #2");
   startTime = Date.now();
   await provider.waitForTransaction(post.hash, 1);
   transactionTime = Date.now() - startTime;
@@ -62,7 +62,7 @@ const main = async () => {
   beforeSubmit = Date.now();
   post = await socialMediaContractFactory
     .connect(userTwo)
-    .userPost("Example Post #2");
+    .userPost("Example Post #3");
   startTime = Date.now();
   await provider.waitForTransaction(post.hash, 1);
   transactionTime = Date.now() - startTime;
@@ -82,7 +82,7 @@ const main = async () => {
   beforeSubmit = Date.now();
   post = await socialMediaContractFactory
     .connect(userThree)
-    .userPost("Example Post #3");
+    .userPost("Example Post #4");
   startTime = Date.now();
   await provider.waitForTransaction(post.hash, 1);
   transactionTime = Date.now() - startTime;
@@ -102,7 +102,7 @@ const main = async () => {
   beforeSubmit = Date.now();
   post = await socialMediaContractFactory
     .connect(userFour)
-    .userPost("Example Post #4");
+    .userPost("Example Post #5");
   startTime = Date.now();
   await provider.waitForTransaction(post.hash, 1);
   transactionTime = Date.now() - startTime;
@@ -112,23 +112,6 @@ const main = async () => {
   console.log("Transaction Time : ", transactionTime);
 
   receipt = await provider.getTransactionReceipt(post.hash);
-  console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
-  console.log(
-    "Transaction Fee:",
-    ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice))
-  );
-
-  beforeSubmit = Date.now();
-  like = await socialMediaContractFactory.connect(userOne).likeMinted("0");
-  startTime = Date.now();
-  await provider.waitForTransaction(like.hash, 1);
-  transactionTime = Date.now() - startTime;
-  submissionTime = Date.now() - beforeSubmit;
-
-  console.log("Submission Time: ", submissionTime);
-  console.log("Transaction Time : ", transactionTime);
-
-  receipt = await provider.getTransactionReceipt(like.hash);
   console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
   console.log(
     "Transaction Fee:",

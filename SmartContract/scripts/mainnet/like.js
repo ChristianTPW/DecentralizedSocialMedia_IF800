@@ -10,7 +10,7 @@ const main = async () => {
   //get social media smart contract information and address
   const socialMediaContractFactory = await hre.ethers.getContractAt(
     "SocialMedia",
-    "0xC84898eCB08e36324A72819D527A0A8Aa2376F35"
+    "0x1052b6b8930E11A7ffF2fD27bFD56F730e8ea68e"
   );
 
   var beforeSubmit;
@@ -110,7 +110,7 @@ const main = async () => {
 
   //like userFour
   beforeSubmit = Date.now();
-  like = await socialMediaContractFactory.connect(userFour).like("1");
+  like = await socialMediaContractFactory.connect(userFour).like("2");
   startTime = Date.now();
   await provider.waitForTransaction(like.hash, 1);
   transactionTime = Date.now() - startTime;

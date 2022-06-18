@@ -10,7 +10,7 @@ const main = async () => {
   //get social media smart contract information and address
   const socialMediaContractFactory = await hre.ethers.getContractAt(
     "SocialMedia",
-    "0xC84898eCB08e36324A72819D527A0A8Aa2376F35"
+    "0x1052b6b8930E11A7ffF2fD27bFD56F730e8ea68e"
   );
 
   var beforeSubmit;
@@ -20,7 +20,7 @@ const main = async () => {
   var submissionTime;
   var receipt;
 
-  //register userZero
+  // //register userZero
   // beforeSubmit = Date.now();
   // register = await socialMediaContractFactory.register("UserZero");
   // startTime = Date.now();
@@ -33,32 +33,32 @@ const main = async () => {
 
   // receipt = await provider.getTransactionReceipt(register.hash);
   // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
-  // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed.mul()));
+  // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
   // console.log(
   //   "Gas Price:",
   //   ethers.utils.formatEther(receipt.effectiveGasPrice)
   // );
 
   //register userOne
-  // beforeSubmit = Date.now();
-  // register = await socialMediaContractFactory
-  //   .connect(userOne)
-  //   .register("UserOne");
-  // startTime = Date.now();
-  // await provider.waitForTransaction(register.hash, 1);
-  // transactionTime = Date.now() - startTime;
-  // submissionTime = Date.now() - beforeSubmit;
+  beforeSubmit = Date.now();
+  register = await socialMediaContractFactory
+    .connect(userOne)
+    .register("UserOne");
+  startTime = Date.now();
+  await provider.waitForTransaction(register.hash, 1);
+  transactionTime = Date.now() - startTime;
+  submissionTime = Date.now() - beforeSubmit;
 
-  // console.log("Submission Time: ", submissionTime);
-  // console.log("Transaction Time : ", transactionTime);
+  console.log("Submission Time: ", submissionTime);
+  console.log("Transaction Time : ", transactionTime);
 
-  // receipt = await provider.getTransactionReceipt(register.hash);
-  // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
-  // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
-  // console.log(
-  //   "Gas Price:",
-  //   ethers.utils.formatEther(receipt.effectiveGasPrice)
-  // );
+  receipt = await provider.getTransactionReceipt(register.hash);
+  console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
+  console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
+  console.log(
+    "Gas Price:",
+    ethers.utils.formatEther(receipt.effectiveGasPrice)
+  );
 
   //register userTwo
   beforeSubmit = Date.now();

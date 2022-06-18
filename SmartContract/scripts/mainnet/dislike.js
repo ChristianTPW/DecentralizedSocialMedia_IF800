@@ -10,7 +10,7 @@ const main = async () => {
   //get social media smart contract information and address
   const socialMediaContractFactory = await hre.ethers.getContractAt(
     "SocialMedia",
-    "0xC84898eCB08e36324A72819D527A0A8Aa2376F35"
+    "0x1052b6b8930E11A7ffF2fD27bFD56F730e8ea68e"
   );
 
   var beforeSubmit;
@@ -21,22 +21,22 @@ const main = async () => {
   var receipt;
 
   //dislike userZero
-  // beforeSubmit = Date.now();
-  // dislike = await socialMediaContractFactory.dislike("2");
-  // startTime = Date.now();
-  // await provider.waitForTransaction(dislike.hash, 1);
-  // transactionTime = Date.now() - startTime;
-  // submissionTime = Date.now() - beforeSubmit;
+  beforeSubmit = Date.now();
+  dislike = await socialMediaContractFactory.dislike("2");
+  startTime = Date.now();
+  await provider.waitForTransaction(dislike.hash, 1);
+  transactionTime = Date.now() - startTime;
+  submissionTime = Date.now() - beforeSubmit;
 
-  // console.log("Submission Time: ", submissionTime);
-  // console.log("Transaction Time : ", transactionTime);
+  console.log("Submission Time: ", submissionTime);
+  console.log("Transaction Time : ", transactionTime);
 
-  // receipt = await provider.getTransactionReceipt(dislike.hash);
-  // console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
-  // console.log(
-  //   "Transaction Fee:",
-  //   ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice))
-  // );
+  receipt = await provider.getTransactionReceipt(dislike.hash);
+  console.log("Gas Used:", ethers.utils.formatEther(receipt.gasUsed));
+  console.log(
+    "Transaction Fee:",
+    ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice))
+  );
 
   // //dislike userOne
   beforeSubmit = Date.now();
