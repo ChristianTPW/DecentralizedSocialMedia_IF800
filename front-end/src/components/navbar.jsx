@@ -52,7 +52,7 @@ const Navbar = () => {
 
       getBalance();
 
-      if (username != "") {
+      if (username !== "") {
         setAddress(username);
       }
     } catch (error) {

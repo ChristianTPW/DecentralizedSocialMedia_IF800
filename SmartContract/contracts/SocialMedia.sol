@@ -130,7 +130,7 @@ contract SocialMedia is ERC721 {
 
             _safeMint(posts[_postId].owner, _postId);
 
-            //set reward as 1%
+            //set reward as 10%
             uint256 amount = 10 * 10**16;
 
             //calling mint function from token smart contract and send to likers
@@ -167,7 +167,7 @@ contract SocialMedia is ERC721 {
             posts[_postId].isActive = false;
             posts[_postId].content = "";
 
-            //set reward as 1%
+            //set reward as 10%
             uint256 amount = 10 * 10**16;
 
             //calling mint function from token smart contract and send to likers

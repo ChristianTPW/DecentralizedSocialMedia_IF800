@@ -3,13 +3,12 @@ import { ethers } from "ethers";
 import { Textarea, Box, Button, Input, HStack } from "@chakra-ui/react";
 
 import contractABI from "../utils/contractABI.json";
-import ShowPost from "./showPost";
 import Loading from "./loading";
 
 const Register = () => {
   const [registerStatus, setRegisterStatus] = useState("");
   const [username, setUsername] = useState("");
-  const [description, setDescription] = useState("");
+  const [registerName, setRegisterName] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(null);
@@ -54,12 +53,15 @@ const Register = () => {
         );
 
         // Get all the domain names from our contract
-        await contract.register(username);
+        setIsLoading(true);
+        await contract.register(registerName);
+        setIsLoading(false);
 
         isRegistered();
       }
     } catch (error) {
       console.log(error);
+      setLoadingMessage(error.message);
     }
   };
 
@@ -78,7 +80,6 @@ const Register = () => {
         // callModal
         setIsLoading(true);
         await contract.userPost(content);
-        //<ShowPost actionName={this.fetchMints} />;
         setIsLoading(false);
       }
     } catch (error) {
@@ -89,7 +90,7 @@ const Register = () => {
 
   const registerForm = () => {
     function getUsername(val) {
-      setUsername(val.target.value);
+      setRegisterName(val.target.value);
     }
 
     return (
@@ -120,6 +121,7 @@ const Register = () => {
           placeholder="What do you want to post?"
           onChange={getContent}
           p="2"
+          maxLength="160"
         ></Textarea>
 
         <Button onClick={post} p="5" mt="5" w="full" colorScheme="twitter">

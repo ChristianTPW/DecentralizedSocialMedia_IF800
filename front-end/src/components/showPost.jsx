@@ -39,9 +39,10 @@ const ShowPost = () => {
         console.log("Balance: ", balance.toString(), typeof balance.toString());
 
         // eslint-disable-next-line no-undef
-        console.log(BigInt(allowance.toString()) <= BigInt(balance.toString()));
+        //console.log(BigInt(allowance.toString()) <= BigInt(balance.toString()));
+        console.log(balance.gte(allowance));
         // eslint-disable-next-line no-undef
-        if (BigInt(allowance.toString()) < BigInt(totalSupply.toString())) {
+        if (balance.gte(allowance)) {
           const totalSupply = await contract.totalSupply();
           await contract.approve(REACT_APP_SOCIALMEDIA, totalSupply.toString());
         } else {
@@ -153,7 +154,7 @@ const ShowPost = () => {
   };
 
   useEffect(() => {
-    fetchMints().then((res) => setPosts(res));
+    fetchMints();
   });
 
   return (

@@ -50,14 +50,6 @@ const Login = () => {
     return <button onClick={connectWallet}>connectWallet</button>;
   };
 
-  const walletConnected = () => {
-    return (
-      <div>
-        <h1>Welcome {address}</h1>
-      </div>
-    );
-  };
-
   useEffect(() => {
     checkIfWalletIsConnected();
   });
